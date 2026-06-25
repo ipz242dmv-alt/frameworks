@@ -1,0 +1,196 @@
+{
+    "info": {
+      "name": "Symfony Logs API",
+      "description": "Повний набір ендпоїнтів для управління системними логами.\n\n**Технічний стек:**\n| Параметр | Значення |\n|---|---|\n| Фреймворк | Symfony 8.1 |\n| Мова | PHP 8.5+ |\n| Контролер | App\\Controller\\LogController |\n| Маршрути | PHP-атрибути #[Route] на методах контролера |\n| Префікс маршрутів | /logs через #[Route('/logs')] на класі |\n| JSON-парсинг | json_decode($request->getContent(), true) + json_last_error() |\n| Сховище | In-memory static array (без БД) |",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:8000",
+        "type": "string"
+      }
+    ],
+    "item": [
+      {
+        "name": "Logs",
+        "item": [
+          {
+            "name": "GET All Logs — Список усіх логів",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{base_url}}/logs",
+                "host": ["{{base_url}}"],
+                "path": ["logs"]
+              },
+              "description": "Повертає список усіх лог-записів. Підтримує фільтрацію через query-параметри: level, source, from, to."
+            },
+            "response": [
+              {
+                "name": "200 OK — Список логів",
+                "status": "OK",
+                "code": 200,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"total\": 5,\n  \"data\": [\n    {\n      \"id\": \"1\",\n      \"level\": \"INFO\",\n      \"message\": \"Application bootstrapped successfully.\",\n      \"source\": \"kernel.boot\",\n      \"context\": {\"env\": \"production\", \"php_version\": \"8.5\"},\n      \"created_at\": \"2026-06-01 08:00:00\",\n      \"updated_at\": \"2026-06-01 08:00:00\"\n    }\n  ]\n}"
+              }
+            ]
+          },
+          {
+            "name": "GET All Logs with Filter — Фільтрація за рівнем",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{base_url}}/logs?level=ERROR",
+                "host": ["{{base_url}}"],
+                "path": ["logs"],
+                "query": [
+                  {"key": "level", "value": "ERROR", "description": "Рівень логу: DEBUG, INFO, WARNING, ERROR, CRITICAL"},
+                  {"key": "source", "value": "", "disabled": true, "description": "Фільтр по джерелу (часткове співпадіння)"},
+                  {"key": "from", "value": "", "disabled": true, "description": "Від дати (Y-m-d H:i:s)"},
+                  {"key": "to", "value": "", "disabled": true, "description": "До дати (Y-m-d H:i:s)"}
+                ]
+              },
+              "description": "Фільтрація логів за рівнем ERROR."
+            },
+            "response": []
+          },
+          {
+            "name": "GET Log by ID — Лог за ID",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{base_url}}/logs/1",
+                "host": ["{{base_url}}"],
+                "path": ["logs", "1"]
+              },
+              "description": "Повертає один лог-запис за його ідентифікатором."
+            },
+            "response": [
+              {
+                "name": "200 OK — Лог знайдено",
+                "status": "OK",
+                "code": 200,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"id\": \"1\",\n  \"level\": \"INFO\",\n  \"message\": \"Application bootstrapped successfully.\",\n  \"source\": \"kernel.boot\",\n  \"context\": {\"env\": \"production\", \"php_version\": \"8.5\"},\n  \"created_at\": \"2026-06-01 08:00:00\",\n  \"updated_at\": \"2026-06-01 08:00:00\"\n}"
+              },
+              {
+                "name": "404 Not Found — Лог не знайдено",
+                "status": "Not Found",
+                "code": 404,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"error\": \"Log entry with id \\\"99\\\" was not found.\"\n}"
+              }
+            ]
+          },
+          {
+            "name": "POST Create Log — Створити лог",
+            "request": {
+              "method": "POST",
+              "header": [{"key": "Content-Type", "value": "application/json"}],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"level\": \"WARNING\",\n  \"message\": \"Disk space running low on /var/log partition.\",\n  \"source\": \"monitor.disk\",\n  \"context\": {\n    \"free_gb\": 2.1,\n    \"threshold_gb\": 5\n  }\n}",
+                "options": {"raw": {"language": "json"}}
+              },
+              "url": {
+                "raw": "{{base_url}}/logs",
+                "host": ["{{base_url}}"],
+                "path": ["logs"]
+              },
+              "description": "Створює новий лог-запис. Обов'язкові поля: level, message, source."
+            },
+            "response": [
+              {
+                "name": "201 Created — Лог створено",
+                "status": "Created",
+                "code": 201,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"id\": \"log_6850a1f2d3e4a\",\n  \"level\": \"WARNING\",\n  \"message\": \"Disk space running low on /var/log partition.\",\n  \"source\": \"monitor.disk\",\n  \"context\": {\"free_gb\": 2.1, \"threshold_gb\": 5},\n  \"created_at\": \"2026-06-17 14:22:10\",\n  \"updated_at\": \"2026-06-17 14:22:10\"\n}"
+              },
+              {
+                "name": "400 Bad Request — Відсутні обов'язкові поля",
+                "status": "Bad Request",
+                "code": 400,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"error\": \"Validation failed. Required fields are missing.\",\n  \"missing\": [\"level\", \"source\"]\n}"
+              },
+              {
+                "name": "422 Unprocessable Entity — Невалідний рівень",
+                "status": "Unprocessable Entity",
+                "code": 422,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"error\": \"Invalid log level \\\"TRACE\\\".\",\n  \"allowed\": [\"DEBUG\", \"INFO\", \"WARNING\", \"ERROR\", \"CRITICAL\"]\n}"
+              }
+            ]
+          },
+          {
+            "name": "PATCH Update Log — Оновити лог",
+            "request": {
+              "method": "PATCH",
+              "header": [{"key": "Content-Type", "value": "application/json"}],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"level\": \"CRITICAL\",\n  \"message\": \"Database connection permanently lost.\"\n}",
+                "options": {"raw": {"language": "json"}}
+              },
+              "url": {
+                "raw": "{{base_url}}/logs/3",
+                "host": ["{{base_url}}"],
+                "path": ["logs", "3"]
+              },
+              "description": "Часткове оновлення лог-запису. Усі поля необов'язкові."
+            },
+            "response": [
+              {
+                "name": "200 OK — Лог оновлено",
+                "status": "OK",
+                "code": 200,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"id\": \"3\",\n  \"level\": \"CRITICAL\",\n  \"message\": \"Database connection permanently lost.\",\n  \"source\": \"db.connection\",\n  \"context\": {\"driver\": \"mysql\", \"host\": \"127.0.0.1\", \"port\": 3306},\n  \"created_at\": \"2026-06-01 10:30:00\",\n  \"updated_at\": \"2026-06-17 14:25:00\"\n}"
+              },
+              {
+                "name": "404 Not Found — Лог не знайдено",
+                "status": "Not Found",
+                "code": 404,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"error\": \"Log entry with id \\\"99\\\" was not found.\"\n}"
+              }
+            ]
+          },
+          {
+            "name": "DELETE Log — Видалити лог",
+            "request": {
+              "method": "DELETE",
+              "header": [],
+              "url": {
+                "raw": "{{base_url}}/logs/1",
+                "host": ["{{base_url}}"],
+                "path": ["logs", "1"]
+              },
+              "description": "Видаляє лог-запис за ID."
+            },
+            "response": [
+              {
+                "name": "200 OK — Лог видалено",
+                "status": "OK",
+                "code": 200,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"message\": \"Log entry \\\"1\\\" has been deleted successfully.\"\n}"
+              },
+              {
+                "name": "404 Not Found — Лог не знайдено",
+                "status": "Not Found",
+                "code": 404,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": "{\n  \"error\": \"Log entry with id \\\"99\\\" was not found.\"\n}"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
