@@ -1,0 +1,6 @@
+laravel/vendor/
+laravel/.env
+laravel/node_modules/
+symfony/vendor/
+symfony/var/
+symfony/node_modules/
